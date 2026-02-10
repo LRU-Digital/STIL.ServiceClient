@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget information">
-		<Version>1.1.3</Version>
+		<Version>1.2.0</Version>
 		<Authors>PensionDanmark</Authors>
 		<Owners>PensionDanmark</Owners>
 		<Copyright>Copyright © PensionDanmark 2023</Copyright>
@@ -30,7 +30,6 @@
 		</Description>
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
-
 
 	<ItemGroup>
 		<None Include="Assets\pdlogo_128x128.png" Pack="true" PackagePath="" />
