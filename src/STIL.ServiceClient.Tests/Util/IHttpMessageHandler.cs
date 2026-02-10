@@ -1,4 +1,9 @@
-﻿namespace STIL.ServiceClient.Tests.Util
+﻿using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace STIL.ServiceClient.Tests.Util
 {
     /// <summary>
     /// An interface to facilitate mocking the protected <see cref="HttpMessageHandler.SendAsync(HttpRequestMessage, CancellationToken)" /> method.

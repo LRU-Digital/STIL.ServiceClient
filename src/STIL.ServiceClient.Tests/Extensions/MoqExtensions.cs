@@ -1,8 +1,13 @@
-﻿using Moq.Language.Flow;
+﻿using System;
+using Moq.Language.Flow;
 using Moq.Protected;
 using System.Linq.Expressions;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using Moq;
 using STIL.ServiceClient.Tests.Util;
 
 namespace STIL.ServiceClient.Tests.Extensions

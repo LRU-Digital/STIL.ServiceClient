@@ -1,5 +1,8 @@
+using System;
 using System.Globalization;
+using System.Threading;
 using STIL.ServiceClient.Util.SoapHelper;
+using Xunit;
 
 namespace STIL.ServiceClient.Tests.Util;
 
@@ -9,10 +12,10 @@ public class SoapString
     private CultureInfo DanishCulture = new("da-DK");
     private CultureInfo EnglishUSCulture = new("en-US");
     
-    private DateTime dateTime1 = new DateTime(2025,1,1, 0, 0, 0, DateTimeKind.Utc);
+    private DateTime dateTime1 = new(2025,1,1, 0, 0, 0, DateTimeKind.Utc);
     private string expectedOutput = "2025-01-01T00:00:00.000Z";
     
-    private DateTime dateTime2 = new DateTime(2025, 1,2,3,4,5,6, DateTimeKind.Utc);
+    private DateTime dateTime2 = new(2025, 1,2,3,4,5,6, DateTimeKind.Utc);
     private string expectedOutput2 = "2025-01-02T03:04:05.006Z";
 
     [Fact]

@@ -1,8 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using STIL.ServiceClient.ConfigurationProviders;
 using STIL.ServiceClient.Extensions;
 using System.Security.Cryptography.X509Certificates;
+using AwesomeAssertions;
+using Moq;
+using Xunit;
 
 namespace STIL.ServiceClient.Tests.VEU
 {
