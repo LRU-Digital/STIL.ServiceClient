@@ -144,7 +144,6 @@ namespace STIL.ServiceClient
                     $"The response type: {typeof(T).Name} does not match the response name of the xml element.");
             }
 
-            //string nameSpace = body.GetDefaultNamespace().NamespaceName;
             string nameSpace = body.Name.NamespaceName;
             XmlSerializer serializer = new XmlSerializer(
                 typeof(T),

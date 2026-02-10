@@ -75,7 +75,6 @@ public class SoapRequestBuilder<T>
     /// <summary>
     /// Builds an unsigned SOAP message. This constructs all parts needed to sign the SOAP Envelope.
     /// </summary>
-    /// <param name="signingCertificate">The certificate that will be used to sign the message.</param>
     /// <returns>A document ready to be signed with the signing certificate.</returns>
     public XDocument Build()
     {
@@ -85,7 +84,6 @@ public class SoapRequestBuilder<T>
     /// <summary>
     /// Adds the top level SOAP Envelope element.
     /// </summary>
-    /// <param name="document">The document to add the envelope to.</param>
     private SoapRequestBuilder<T> AddEnvelope()
     {
         _document.Add(new XElement(
@@ -114,7 +112,7 @@ public class SoapRequestBuilder<T>
     /// <summary>
     /// Adds the SOAP Body element.
     /// </summary>
-    /// <param name="document">The document to add the SOAP body element to.</param>
+    /// <param name="requestObject">Object representing the actual request.</param>
     public SoapRequestBuilder<T> AddBody(T requestObject)
     {
         XElement bodyElement = new XElement(
@@ -140,7 +138,6 @@ public class SoapRequestBuilder<T>
     /// <summary>
     /// Adds the public key of the certificate that will be used to sign the document.
     /// </summary>
-    /// <param name="document">The document to add the certificate to.</param>
     /// <param name="signingCertificate">The certificate that will be used to sign the document with.</param>
     /// <returns>A part of the identifier that identifies the signing certificate element.</returns>
     public SoapRequestBuilder<T> AddBinarySecurityToken(X509Certificate2 signingCertificate)
