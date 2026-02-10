@@ -1,5 +1,7 @@
 using System.ServiceModel;
 
+using STIL.ServiceClient.DTOs.BPI.Common;
+
 namespace STIL.ServiceClient.DTOs.BPI.WsiBruger;
 
 public class hentBrugersKontaktpersonerRequest

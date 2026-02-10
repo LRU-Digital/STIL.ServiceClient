@@ -3,9 +3,11 @@ using System.Xml.Serialization;
 
 namespace STIL.ServiceClient.DTOs.BPI.WsiBruger;
 
+[MessageContract(IsWrapped=false)]
+[XmlType(Namespace="https://brugerdatabasen.stil.dk/bpi/wsibruger/7")]
+[XmlRoot(ElementName="hentBrugersInstitutionstilknytningerResponse")]
 public class hentBrugersInstitutionstilknytningerResponse
 {
-    [MessageBodyMember(Name="hentBrugersInstitutionstilknytningerResponse", Namespace="https://brugerdatabasen.stil.dk/bpi/wsibruger/7", Order=0)]
-    [XmlArrayItem("institutionstilknytning", IsNullable=false)]
-    public Institutionstilknytning[] hentBrugersInstitutionstilknytningerResponse1  { get; set; }
+    [XmlElement("institutionstilknytning", IsNullable=false)]
+    public Institutionstilknytning[] institutionstilknytning { get; set; }
 }
