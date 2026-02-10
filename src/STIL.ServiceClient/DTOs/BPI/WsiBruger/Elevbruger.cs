@@ -2,6 +2,8 @@ using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.Xml.Serialization;
 
+using STIL.ServiceClient.DTOs.BPI.Common;
+
 namespace STIL.ServiceClient.DTOs.BPI.WsiBruger;
 
 /// <remarks/>

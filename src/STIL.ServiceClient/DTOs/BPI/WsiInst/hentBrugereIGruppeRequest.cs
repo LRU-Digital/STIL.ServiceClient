@@ -1,5 +1,7 @@
 using System.ServiceModel;
 
+using STIL.ServiceClient.DTOs.BPI.Common;
+
 namespace STIL.ServiceClient.DTOs.BPI.WsiInst;
 
 public class hentBrugereIGruppeRequest
@@ -8,5 +10,5 @@ public class hentBrugereIGruppeRequest
     public UdbydersystemIdType UdbydersystemId { get; set; }
 
     [MessageBodyMember(Namespace="https://brugerdatabasen.stil.dk/bpi/wsiinst/6", Order=0)]
-    public HentBrugereIGruppe hentBrugereIGruppe { get; set; }
+    public hentBrugereIGruppe hentBrugereIGruppe { get; set; }
 }

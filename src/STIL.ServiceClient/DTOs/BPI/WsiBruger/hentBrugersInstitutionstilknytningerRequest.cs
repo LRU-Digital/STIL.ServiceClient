@@ -1,5 +1,7 @@
 using System.ServiceModel;
 
+using STIL.ServiceClient.DTOs.BPI.Common;
+
 namespace STIL.ServiceClient.DTOs.BPI.WsiBruger;
 
 public class hentBrugersInstitutionstilknytningerRequest
@@ -8,5 +10,5 @@ public class hentBrugersInstitutionstilknytningerRequest
     public UdbydersystemIdType UdbydersystemId { get; set; }
 
     [MessageBodyMember(Namespace="https://brugerdatabasen.stil.dk/bpi/wsibruger/7", Order=0)]
-    public HentBrugersInstitutionstilknytninger hentBrugersInstitutionstilknytninger  { get; set; }
+    public hentBrugersInstitutionstilknytninger hentBrugersInstitutionstilknytninger { get; set; }
 }

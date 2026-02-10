@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -12,76 +13,86 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using STIL.ServiceClient.ConfigurationProviders;
-using STIL.ServiceClient.Util.SoapHelper;
 
 namespace STIL.ServiceClient
 {
     /// <inheritdoc />
-    public class StilServiceClient : IStilServiceClient
+    public class SoapServiceClient : ISoapServiceClient, IDisposable
     {
-        private readonly X509Certificate2 _clientCertificate;
-        private readonly X509Certificate2 _signingCertificate;
         private readonly IRetryPolicyProvider _retryPolicyProvider;
-        private readonly IStilUrlGenerator _urlGenerator;
-        private HttpClient _stilHttpClient;
+
+        private bool _ownsHttpClient;
+        private HttpClient _soapHttpClient;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StilServiceClient" /> class.
+        /// Initializes a new instance of the <see cref="SoapServiceClient" /> class.
         /// </summary>
-        /// <param name="baseUrl">The baseUrl for the SOAP services, ex. https://et.integrationsplatformen.dk.</param>
-        /// <param name="urlGenerator"></param>
-        /// <param name="clientCertificate">The http client certificate.</param>
-        /// <param name="signingCertificate">The xml signing certificate.</param>
-        public StilServiceClient(IStilUrlGenerator urlGenerator, X509Certificate2 clientCertificate, X509Certificate2 signingCertificate)
-            : this(urlGenerator, clientCertificate, signingCertificate, new DefaultRetryPolicyProvider())
+        /// <param name="preconfiguredClient">A preconfigured HttpClient.</param>
+        public SoapServiceClient(HttpClient preconfiguredClient)
+            : this(preconfiguredClient, new DefaultRetryPolicyProvider())
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StilServiceClient" /> class.
+        /// Initializes a new instance of the <see cref="SoapServiceClient" /> class.
         /// </summary>
-        /// <param name="baseUrl">The baseUrl for the SOAP services, ex. https://et.integrationsplatformen.dk.</param>
-        /// <param name="urlGenerator"></param>
-        /// <param name="clientCertificate">The http client certificate.</param>
-        /// <param name="signingCertificate">The xml signing certificate.</param>
+        /// <param name="preconfiguredClient">A preconfigured HttpClient.</param>
         /// <param name="retryPolicyProvider">The retry policy provider.</param>
-        public StilServiceClient(IStilUrlGenerator urlGenerator, X509Certificate2 clientCertificate, X509Certificate2 signingCertificate, IRetryPolicyProvider retryPolicyProvider)
+        public SoapServiceClient(HttpClient preconfiguredClient, IRetryPolicyProvider retryPolicyProvider)
         {
-            _urlGenerator = urlGenerator;
-            _clientCertificate = clientCertificate;
-            _signingCertificate = signingCertificate;
+            _soapHttpClient = preconfiguredClient;
+            _retryPolicyProvider = retryPolicyProvider;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SoapServiceClient" /> class.
+        /// </summary>
+        /// <param name="clientCertificate">The http client certificate.</param>
+        /// <param name="signingCertificate">The XML signing certificate.</param>
+        public SoapServiceClient(X509Certificate2 clientCertificate)
+            : this(clientCertificate, new DefaultRetryPolicyProvider())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SoapServiceClient" /> class.
+        /// </summary>
+        /// <param name="clientCertificate">The http client certificate.</param>
+        /// <param name="signingCertificate">The XML signing certificate.</param>
+        /// <param name="retryPolicyProvider">The retry policy provider.</param>
+        public SoapServiceClient(X509Certificate2 clientCertificate, IRetryPolicyProvider retryPolicyProvider)
+        {
             _retryPolicyProvider = retryPolicyProvider;
 
             HttpClientHandler clientHttpHandler = new HttpClientHandler
             {
-                ClientCertificates = { _clientCertificate },
+                ClientCertificates = { clientCertificate },
             };
 
-            _stilHttpClient = new HttpClient(clientHttpHandler);
+            _ownsHttpClient = true;
+            _soapHttpClient = new HttpClient(clientHttpHandler);
         }
 
         /// <inheritdoc />
-        public async Task<TResponse> SendSoapRequest<TRequest, TResponse, TServiceFaultDetailer>(string methodName, TRequest dataRequest, CancellationToken cancellationToken = default)
-            where TRequest : class
+        public async Task<TResponse> SendSoapRequest<TResponse, TServiceFaultDetailer>(Uri requestUri, string requestXml, CancellationToken cancellationToken = default)
             where TResponse : class
             where TServiceFaultDetailer : class
         {
             Polly.Retry.AsyncRetryPolicy<HttpResponseMessage> retryHandler = _retryPolicyProvider.GetRetryPolicy();
-            SignedStilSoapMessage<TRequest> stilRequest = new SignedStilSoapMessage<TRequest>(dataRequest);
 
             HttpResponseMessage response = await retryHandler.ExecuteAsync(async () =>
             {
-                string signedRequest = stilRequest.GetSignedXml(_signingCertificate);
                 using (HttpRequestMessage request = new HttpRequestMessage())
                 {
                     request.Method = HttpMethod.Post;
-                    request.Content = new StringContent(signedRequest, Encoding.UTF8, "application/soap+xml");
-                    request.RequestUri = _urlGenerator.Generate(methodName);
-                    return await _stilHttpClient
+                    request.Content = new StringContent(requestXml, Encoding.UTF8, MediaTypeNames.Application.Soap);
+                    request.RequestUri = requestUri;
+
+                    return await _soapHttpClient
                                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                                .ConfigureAwait(false)
                            ?? throw new InvalidOperationException(
-                               $"{nameof(_stilHttpClient.SendAsync)} returned null for response type: {typeof(TResponse).Name}.");
+                               $"{nameof(_soapHttpClient.SendAsync)} returned null for response type: {typeof(TResponse).Name}.");
                 }
             });
 
@@ -100,16 +111,6 @@ namespace STIL.ServiceClient
             {
                 response.Dispose();
             }
-        }
-
-        /// <summary>
-        /// sets the instance of the <see cref="HttpClient" /> class.
-        /// Used for test purposes.
-        /// </summary>
-        /// <param name="httpClientHandler">The http client.</param>
-        public void SetHttpClient(HttpClientHandler httpClientHandler)
-        {
-            _stilHttpClient = new HttpClient(httpClientHandler);
         }
 
         /// <summary>
@@ -143,12 +144,15 @@ namespace STIL.ServiceClient
                     $"The response type: {typeof(T).Name} does not match the response name of the xml element.");
             }
 
+            //string nameSpace = body.GetDefaultNamespace().NamespaceName;
+            string nameSpace = body.Name.NamespaceName;
             XmlSerializer serializer = new XmlSerializer(
                 typeof(T),
-                //body.GetNamespaceOfPrefix(Version)?.NamespaceName ??
-                body.GetDefaultNamespace().NamespaceName);
+                nameSpace);
+
             using (XmlReader reader = body.CreateReader())
             {
+                reader.MoveToContent();
                 return serializer.Deserialize(reader) as T;
             }
         }
@@ -164,7 +168,7 @@ namespace STIL.ServiceClient
             HttpResponseMessage response)
             where TServiceFaultDetailer : class
         {
-            if (response.Content == null)
+            if (response.Content is null)
             {
                 return new FaultException(new FaultReason(response.ReasonPhrase), new FaultCode("no content found on error"), response.RequestMessage.RequestUri.AbsoluteUri);
             }
@@ -203,6 +207,14 @@ namespace STIL.ServiceClient
             using (XmlReader reader = body.CreateReader())
             {
                 return (serializer.Deserialize(reader) as TServiceFaultDetailer, null);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_ownsHttpClient)
+            {
+                _soapHttpClient.Dispose();
             }
         }
     }

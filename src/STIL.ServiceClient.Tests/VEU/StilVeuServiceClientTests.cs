@@ -1,11 +1,18 @@
+using System;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel;
+using System.Threading.Tasks;
+using AwesomeAssertions;
+using Moq;
 using STIL.ServiceClient.DTOs.VEU.HentOptagedePladser;
 using STIL.ServiceClient.DTOs.VEU.HentTilmeldingerVeuInteressenter;
 using STIL.ServiceClient.DTOs.VEU.HentUdbud;
 using STIL.ServiceClient.Tests.Extensions;
 using STIL.ServiceClient.Tests.Util;
+using Xunit;
 using ServiceFaultDetailer = STIL.ServiceClient.DTOs.VEU.HentOptagedePladser.ServiceFaultDetailer;
 
 namespace STIL.ServiceClient.Tests.VEU;

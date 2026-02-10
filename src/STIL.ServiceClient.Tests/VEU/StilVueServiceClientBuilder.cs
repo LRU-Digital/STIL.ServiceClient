@@ -1,4 +1,7 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
+using Moq;
 using STIL.ServiceClient.ConfigurationProviders;
 using STIL.ServiceClient.Tests.Util;
 
@@ -6,7 +9,7 @@ namespace STIL.ServiceClient.Tests.VEU
 {
     internal class StilVueServiceClientBuilder
     {
-        private Mock<IStilServiceClient>? _stilServiceClientMock;
+        private Mock<ISoapServiceClient>? _soapServiceClientMock;
         private Mock<HttpClientHandler> _httpClientHandlerMock;
         private X509Certificate2 _signingCertificate;
         private X509Certificate2 _clientCertificate;
@@ -31,9 +34,9 @@ namespace STIL.ServiceClient.Tests.VEU
             return this;
         }
 
-        public StilVueServiceClientBuilder With(Mock<IStilServiceClient> stilServiceClientMock)
+        public StilVueServiceClientBuilder With(Mock<ISoapServiceClient> soapServiceClientMock)
         {
-            _stilServiceClientMock = stilServiceClientMock;
+            _soapServiceClientMock = soapServiceClientMock;
             return this;
         }
 
@@ -64,17 +67,16 @@ namespace STIL.ServiceClient.Tests.VEU
         public IStilVeuServiceClient Build()
         {
             // Return veu service client with mock of stil service client if this was created
-            if (_stilServiceClientMock != null)
+            if (_soapServiceClientMock != null)
             {
-                return new StilVeuServiceClient(_stilServiceClientMock.Object);
+                return new StilVeuServiceClient(_baseUrl, _soapServiceClientMock.Object, _signingCertificate);
             }
 
             // Create stil service client and set mocked http client handler.
-            var stilServiceClient = new StilServiceClient(new StilVeuUrlGenerator(_baseUrl), _clientCertificate, _signingCertificate, _retryPolicyProvider);
+            SoapServiceClient soapServiceClient = new(new HttpClient(_httpClientHandlerMock.Object), _retryPolicyProvider);
             _httpClientHandlerMock.Object.ClientCertificates.Add(_clientCertificate);
-            stilServiceClient.SetHttpClient(_httpClientHandlerMock.Object);
             
-            return new StilVeuServiceClient(stilServiceClient);
+            return new StilVeuServiceClient(_baseUrl, soapServiceClient, _signingCertificate);
         }
     }
 }
