@@ -24,17 +24,17 @@ public class BpiSoapRequestGenerator
                                              Guid? messageId = null)
     {
         Guid requestId = messageId ?? Guid.NewGuid();
-        
-        SoapRequestBuilder<TRequest> builder2 = new(requestId);
 
-        XDocument requestDoc2 = builder2.AddBody(requestObject)
+        SoapRequestBuilder<TRequest> builder = new(requestId);
+
+        XDocument requestDoc = builder.AddBody(requestObject)
             .AddBinarySecurityToken(signingCertificate)
             .AddTimeStamp()
             .AddWSAActionAndMessageId($"{_serviceUrl}/{action}")
             .AddBPISystemId(_systemId)
             .Build();
 
-        SoapMessageSigner signer = new(requestDoc2);
+        SoapMessageSigner signer = new(requestDoc);
         string requestXml = signer
             .AddReference("Timestamp", requestId)
             .AddReference("Body", requestId)
