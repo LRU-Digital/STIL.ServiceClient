@@ -13,4 +13,12 @@ public class Institutionstilknytning
     [XmlElement("elev", typeof(InstitutionstilknytningElev), Order = 1)]
     [XmlElement("kontakt", typeof(InstitutionstilknytningKontakt), Order = 1)]
     public object Item { get; set; }
+
+    public InstitutionstilknytningAnsat? Ansat => Item as InstitutionstilknytningAnsat;
+
+    public InstitutionstilknytningEkstern? Ekstern => Item as InstitutionstilknytningEkstern;
+
+    public InstitutionstilknytningElev? Elev => Item as InstitutionstilknytningElev;
+
+    public InstitutionstilknytningKontakt? Kontakt => Item as InstitutionstilknytningKontakt;
 }
