@@ -1,4 +1,3 @@
-using System.ServiceModel;
 using System.Xml.Serialization;
 
 namespace STIL.ServiceClient.DTOs.BPI.WsiEksport.Medium

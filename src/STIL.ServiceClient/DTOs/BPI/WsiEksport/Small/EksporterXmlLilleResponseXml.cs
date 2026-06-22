@@ -1,5 +1,4 @@
 using System.Xml.Serialization;
-using STIL.ServiceClient.DTOs.BPI.WsiEksport.Small;
 
 namespace STIL.ServiceClient.DTOs.BPI.WsiEksport.Small
 {
