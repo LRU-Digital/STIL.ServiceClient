@@ -4,6 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 using STIL.ServiceClient.DTOs.BPI.Common;
+using STIL.ServiceClient.DTOs.BPI.WsiEksport.Medium;
 using STIL.ServiceClient.DTOs.BPI.WsiEksport.Small;
 
 namespace STIL.ServiceClient;
@@ -37,6 +38,33 @@ public class StilWsiEksportServiceClient : BaseStilBpiServiceClient
         EksporterXmlLilleResponse response = await _soapServiceClient.SendSoapRequest<EksporterXmlLilleResponse, AuthentificationError>(
             _baseUrl,
             _requestGenerator.GetSignedRequest(new eksporterXmlLille { instnr = instnr }, _signingCertificate, messageId));
+
+        return response;
+    }
+
+    public async Task<EksporterXmlMediumResponse> EksporterXmlMedium(string instnr, Guid? messageId = null)
+    {
+        EksporterXmlMediumResponse response = await _soapServiceClient.SendSoapRequest<EksporterXmlMediumResponse, AuthentificationError>(
+            _baseUrl,
+            _requestGenerator.GetSignedRequest(new eksporterXmlMellem { instnr = instnr }, _signingCertificate, messageId));
+
+        return response;
+    }
+
+    public async Task<HentDataAftalerLilleResponse> HentDataAftalerLille(Guid? messageId = null)
+    {
+        HentDataAftalerLilleResponse response = await _soapServiceClient.SendSoapRequest<HentDataAftalerLilleResponse, AuthentificationError>(
+            _baseUrl,
+            _requestGenerator.GetSignedRequest(new hentDataAftalerLille(), "hentDataAftalerLille", _signingCertificate, messageId));
+
+        return response;
+    }
+
+    public async Task<HentDataAftalerMellemResponse> HentDataAftalerMellem(Guid? messageId = null)
+    {
+        HentDataAftalerMellemResponse response = await _soapServiceClient.SendSoapRequest<HentDataAftalerMellemResponse, AuthentificationError>(
+            _baseUrl,
+            _requestGenerator.GetSignedRequest(new hentDataAftalerMellem(), "hentDataAftalerMellem", _signingCertificate, messageId));
 
         return response;
     }
