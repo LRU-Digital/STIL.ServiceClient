@@ -42,9 +42,9 @@ public class StilWsiEksportServiceClient : BaseStilBpiServiceClient
         return response;
     }
 
-    public async Task<EksporterXmlMediumResponse> EksporterXmlMedium(string instnr, Guid? messageId = null)
+    public async Task<EksporterXmlMellemResponse> EksporterXmlMedium(string instnr, Guid? messageId = null)
     {
-        EksporterXmlMediumResponse response = await _soapServiceClient.SendSoapRequest<EksporterXmlMediumResponse, AuthentificationError>(
+        EksporterXmlMellemResponse response = await _soapServiceClient.SendSoapRequest<EksporterXmlMellemResponse, AuthentificationError>(
             _baseUrl,
             _requestGenerator.GetSignedRequest(new eksporterXmlMellem { instnr = instnr }, _signingCertificate, messageId));
 
