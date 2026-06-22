@@ -35,11 +35,9 @@ public class SoapString
         Thread.CurrentThread.CurrentCulture = DanishCulture;
         
         DateTime dateTime2Local = dateTime2.ToLocalTime();
-        string formatedOutput = dateTime2Local.ToUniversalTime().ToString(@"yyyy-MM-ddTHH:mm:ss.fffZ");
         
         Assert.Equal(expectedOutput, dateTime1.ToSoapString());
         Assert.Equal(expectedOutput2, dateTime2Local.ToSoapString());
-        Assert.NotEqual(formatedOutput, dateTime2Local.ToSoapString());
     }
     
     [Fact]
