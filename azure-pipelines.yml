@@ -13,7 +13,7 @@ variables:
   ProjectPath: 'src/STIL.ServiceClient/STIL.ServiceClient.csproj'
   TestPath: 'src/STIL.ServiceClient.Tests/STIL.ServiceClient.Tests.csproj'
   PackageOutputPath: '$(Build.SourcesDirectory)/artifacts'
-  PackageId: 'LRU-Digital.STIL.ServiceClient'
+  PublishPackageId: 'LRU-Digital.STIL.ServiceClient'
   FeedUrl: 'https://pkgs.dev.azure.com/LRIADMPRO/_packaging/LRUD-NuGet/nuget/v3/index.json'
 
 steps:
@@ -57,7 +57,7 @@ steps:
         Write-Host "Package version: $version"
 
   - script: |
-      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PackageId)" /p:Version="$(PackageVersion)"
+      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PublishPackageId)" /p:Version="$(PackageVersion)"
     displayName: Package
 
   - task: PublishBuildArtifacts@1
