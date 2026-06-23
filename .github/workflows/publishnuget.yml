@@ -39,10 +39,11 @@ jobs:
         run: dotnet test ${{ env.TEST_PATH }} -c Release --no-restore --no-build
       - name: Extract version from release tag
         id: version
+        shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          if ($tag -match '^release-') {
-            $version = $tag
+          if ($tag -match '^release-(.+)$') {
+            $version = $Matches[1]
           } else {
             $date = [datetime]::UtcNow.ToString('yyyyMMdd')
             $version = "$date.${{ github.run_number }}"
