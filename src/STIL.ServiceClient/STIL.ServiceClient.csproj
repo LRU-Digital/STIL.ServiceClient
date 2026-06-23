@@ -23,7 +23,7 @@
 		<PackageReleaseNotes>Forked release</PackageReleaseNotes>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
 		<RepositoryUrl>https://github.com/LRU-Digital/STIL.ServiceClient</RepositoryUrl>
 		<Description>
 			C# Service Client to interact with some of the SOAP services provided by Styrelsen for IT og Læring (STIL). Compatible with .NET Core
