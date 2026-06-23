@@ -27,6 +27,7 @@
 		<RepositoryUrl>https://github.com/LRU-Digital/STIL.ServiceClient</RepositoryUrl>
 		<Description>
 			C# Service Client to interact with some of the SOAP services provided by Styrelsen for IT og Læring (STIL). Compatible with .NET Core
+			Forked by LRU-Digital to add support for .NET 10 and to fix some issues with the original implementation.
 		</Description>
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
