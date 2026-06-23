@@ -13,7 +13,7 @@
 		<Version>1.5.0</Version>
 		<Authors>LRU-Digital</Authors>
 		<Owners>LRU-Digital</Owners>
-		<Copyright>Copyright © LRU-Digital 2023</Copyright>
+		<Copyright>Copyright © LRU-Digital</Copyright>
 		<Title>STIL Service Client</Title>
 		<PackageIcon>pdlogo_128x128.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
