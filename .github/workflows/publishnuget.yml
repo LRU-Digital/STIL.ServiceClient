@@ -41,7 +41,12 @@ jobs:
         id: version
         run: |
           $tag = "${{ github.ref_name }}"
-          $version = $tag -replace '^v', ''
+          if ($tag -match '^release-') {
+            $version = $tag
+          } else {
+            $date = [datetime]::UtcNow.ToString('yyyyMMdd')
+            $version = "$date.${{ github.run_number }}"
+          }
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
       - name: Package
         run: dotnet pack ${{ env.PROJECT_PATH }} -c Release --no-build -o ${{ env.PACKAGE_OUTPUT_PATH }} -p:PackageId=${{ env.PACKAGE_ID }} -p:Version=${{ steps.version.outputs.VERSION }}
