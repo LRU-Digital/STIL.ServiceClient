@@ -40,6 +40,7 @@ steps:
     displayName: Test
 
   - task: PowerShell@2
+    name: SetVersion
     displayName: Extract version from release tag
     inputs:
       targetType: inline
@@ -53,11 +54,12 @@ steps:
           $version = "$date.$(Build.BuildId)"
         }
 
-        Write-Host "##vso[task.setvariable variable=PackageVersion]$version"
+        Write-Host "##vso[task.setvariable variable=PackageVersion;isOutput=true]$version"
         Write-Host "Package version: $version"
 
   - script: |
-      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PublishPackageId)" /p:Version="$(PackageVersion)"
+      echo "Packing with version: $(SetVersion.PackageVersion)"
+      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PublishPackageId)" /p:Version="$(SetVersion.PackageVersion)"
     displayName: Package
 
   - task: PublishBuildArtifacts@1
