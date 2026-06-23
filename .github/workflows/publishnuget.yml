@@ -7,6 +7,11 @@ on:
 permissions:
   contents: read
   packages: write
+
+concurrency:
+  group: nuget-publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: build, test, pack & publish
@@ -23,12 +28,20 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Install dependencies
-        run: dotnet restore ${{ env.TEST_PATH }}
+        run: |
+          dotnet restore ${{ env.PROJECT_PATH }}
+          dotnet restore ${{ env.TEST_PATH }}
       - name: Build
         run: dotnet build ${{ env.PROJECT_PATH }} -c Release --no-restore
       - name: Test
         run: dotnet test ${{ env.TEST_PATH }} -c Release --no-restore --no-build
       - name: Package
         run: dotnet pack ${{ env.PROJECT_PATH }} -c Release --no-build -o ${{ env.PACKAGE_OUTPUT_PATH }} -p:PackageId=${{ env.PACKAGE_ID }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ${{ env.PACKAGE_OUTPUT_PATH }}
+          retention-days: 30
       - name: Publish to GitHub Packages
         run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
