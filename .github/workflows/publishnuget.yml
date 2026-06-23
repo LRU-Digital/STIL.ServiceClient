@@ -1,13 +1,17 @@
-name: Publish to nuget.org
+name: Publish to GitHub Packages
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main # Default release branch
-    paths-ignore:
-      - '**/README.md'
-      - '**/.github/**'
-      - '**/STIl.ServiceClient.Tests/**'
+  release:
+    types:
+      - published
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: nuget-publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: build, test, pack & publish
@@ -15,21 +19,31 @@ jobs:
     env:
       PROJECT_PATH: ./src/STIL.ServiceClient/STIL.ServiceClient.csproj
       TEST_PATH: ./src/STIL.ServiceClient.Tests/STIL.ServiceClient.Tests.csproj
+      PACKAGE_OUTPUT_PATH: ./artifacts
+      PACKAGE_ID: LRU-Digital.STIL.ServiceClient
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 10.0.x
       - name: Install dependencies
-        run: dotnet restore ${{ env.PROJECT_PATH }}
+        run: |
+          dotnet restore ${{ env.PROJECT_PATH }}
+          dotnet restore ${{ env.TEST_PATH }}
       - name: Build
-        run: dotnet build ${{ env.PROJECT_PATH }} -c Release --no-restore
+        run: |
+          dotnet build ${{ env.PROJECT_PATH }} -c Release --no-restore
+          dotnet build ${{ env.TEST_PATH }} -c Release --no-restore
       - name: Test
-        run: dotnet test ${{ env.TEST_PATH }} -c Release
+        run: dotnet test ${{ env.TEST_PATH }} -c Release --no-restore --no-build
       - name: Package
-        if: github.ref == 'refs/heads/main'
-        run: dotnet pack -c Release -o . ${{ env.PROJECT_PATH }}
-      - name: Publish
-        if: github.ref == 'refs/heads/main'
-        run: dotnet nuget push **.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        run: dotnet pack ${{ env.PROJECT_PATH }} -c Release --no-build -o ${{ env.PACKAGE_OUTPUT_PATH }} -p:PackageId=${{ env.PACKAGE_ID }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ${{ env.PACKAGE_OUTPUT_PATH }}
+          retention-days: 30
+      - name: Publish to GitHub Packages
+        run: dotnet nuget push "${{ env.PACKAGE_OUTPUT_PATH }}/*.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
