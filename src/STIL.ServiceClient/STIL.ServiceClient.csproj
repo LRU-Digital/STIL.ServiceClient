@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget information">
-		<Version>1.5.0</Version>
+		<Version>1.5.1</Version>
 		<Authors>LRU-Digital</Authors>
 		<Owners>LRU-Digital</Owners>
 		<Copyright>Copyright © LRU-Digital</Copyright>
