@@ -1,34 +1,75 @@
-# ASP.NET
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
-
 trigger:
-- main
+  tags:
+    include:
+      - release-*
+
+pr: none
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  BuildConfiguration: 'Release'
+  ProjectPath: 'src/STIL.ServiceClient/STIL.ServiceClient.csproj'
+  TestPath: 'src/STIL.ServiceClient.Tests/STIL.ServiceClient.Tests.csproj'
+  PackageOutputPath: '$(Build.SourcesDirectory)/artifacts'
+  PackageId: 'LRU-Digital.STIL.ServiceClient'
+  FeedUrl: 'https://pkgs.dev.azure.com/LRIADMPRO/_packaging/LRUD-NuGet/nuget/v3/index.json'
 
 steps:
-- task: NuGetToolInstaller@1
+  - checkout: self
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+  - task: UseDotNet@2
+    displayName: Setup dotnet
+    inputs:
+      packageType: sdk
+      version: '10.0.x'
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - script: |
+      dotnet restore "$(ProjectPath)"
+      dotnet restore "$(TestPath)"
+    displayName: Install dependencies
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - script: |
+      dotnet build "$(ProjectPath)" -c "$(BuildConfiguration)" --no-restore
+      dotnet build "$(TestPath)" -c "$(BuildConfiguration)" --no-restore
+    displayName: Build
+
+  - script: |
+      dotnet test "$(TestPath)" -c "$(BuildConfiguration)" --no-restore --no-build
+    displayName: Test
+
+  - task: PowerShell@2
+    displayName: Extract version from release tag
+    inputs:
+      targetType: inline
+      pwsh: true
+      script: |
+        $tag = "$(Build.SourceBranchName)"
+        if ($tag -match '^release-(.+)$') {
+          $version = $Matches[1]
+        } else {
+          $date = [datetime]::UtcNow.ToString('yyyyMMdd')
+          $version = "$date.$(Build.BuildId)"
+        }
+
+        Write-Host "##vso[task.setvariable variable=PackageVersion]$version"
+        Write-Host "Package version: $version"
+
+  - script: |
+      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PackageId)" /p:Version="$(PackageVersion)"
+    displayName: Package
+
+  - task: PublishBuildArtifacts@1
+    displayName: Upload artifacts
+    inputs:
+      PathtoPublish: '$(PackageOutputPath)'
+      ArtifactName: 'nuget-package'
+      publishLocation: 'Container'
+
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate to Azure Artifacts
+
+  - script: |
+      dotnet nuget push "$(PackageOutputPath)/*.nupkg" --source "$(FeedUrl)" --api-key "az" --skip-duplicate
+    displayName: Publish to Azure DevOps NuGet feed
