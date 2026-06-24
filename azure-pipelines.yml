@@ -75,4 +75,4 @@ steps:
   - script: |
       dotnet nuget push "$(PackageOutputPath)/*.nupkg" --source "$(FeedUrl)" --api-key "az" --skip-duplicate
     displayName: Publish to Azure DevOps NuGet feed
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'))
+    condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), eq(variables['Build.Reason'], 'Manual')))
