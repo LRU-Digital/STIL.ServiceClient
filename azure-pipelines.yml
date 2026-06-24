@@ -25,6 +25,9 @@ steps:
       packageType: sdk
       version: '10.0.x'
 
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate to Azure Artifacts
+
   - script: |
       dotnet restore "$(ProjectPath)"
       dotnet restore "$(TestPath)"
@@ -62,16 +65,14 @@ steps:
       dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PublishPackageId)" /p:Version="$(SetVersion.PackageVersion)"
     displayName: Package
 
-  - task: PublishBuildArtifacts@1
+  - task: PublishPipelineArtifact@1
     displayName: Upload artifacts
     inputs:
-      PathtoPublish: '$(PackageOutputPath)'
-      ArtifactName: 'nuget-package'
-      publishLocation: 'Container'
-
-  - task: NuGetAuthenticate@1
-    displayName: Authenticate to Azure Artifacts
+      targetPath: '$(PackageOutputPath)'
+      artifact: 'nuget-package'
+      publishLocation: 'pipeline'
 
   - script: |
       dotnet nuget push "$(PackageOutputPath)/*.nupkg" --source "$(FeedUrl)" --api-key "az" --skip-duplicate
     displayName: Publish to Azure DevOps NuGet feed
+    condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), eq(variables['Build.Reason'], 'Manual')))
