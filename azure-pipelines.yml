@@ -1,0 +1,78 @@
+trigger:
+  tags:
+    include:
+      - release-*
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  BuildConfiguration: 'Release'
+  ProjectPath: 'src/STIL.ServiceClient/STIL.ServiceClient.csproj'
+  TestPath: 'src/STIL.ServiceClient.Tests/STIL.ServiceClient.Tests.csproj'
+  PackageOutputPath: '$(Build.SourcesDirectory)/artifacts'
+  PublishPackageId: 'LRU-Digital.STIL.ServiceClient'
+  FeedUrl: 'https://pkgs.dev.azure.com/LRIADMPRO/_packaging/LRUD-NuGet/nuget/v3/index.json'
+
+steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: Setup dotnet
+    inputs:
+      packageType: sdk
+      version: '10.0.x'
+
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate to Azure Artifacts
+
+  - script: |
+      dotnet restore "$(ProjectPath)"
+      dotnet restore "$(TestPath)"
+    displayName: Install dependencies
+
+  - script: |
+      dotnet build "$(ProjectPath)" -c "$(BuildConfiguration)" --no-restore
+      dotnet build "$(TestPath)" -c "$(BuildConfiguration)" --no-restore
+    displayName: Build
+
+  - script: |
+      dotnet test "$(TestPath)" -c "$(BuildConfiguration)" --no-restore --no-build
+    displayName: Test
+
+  - task: PowerShell@2
+    name: SetVersion
+    displayName: Extract version from release tag
+    inputs:
+      targetType: inline
+      pwsh: true
+      script: |
+        $tag = "$(Build.SourceBranchName)"
+        if ($tag -match '^release-(.+)$') {
+          $version = $Matches[1]
+        } else {
+          $date = [datetime]::UtcNow.ToString('yyyyMMdd')
+          $version = "$date.$(Build.BuildId)"
+        }
+
+        Write-Host "##vso[task.setvariable variable=PackageVersion;isOutput=true]$version"
+        Write-Host "Package version: $version"
+
+  - script: |
+      echo "Packing with version: $(SetVersion.PackageVersion)"
+      dotnet pack "$(ProjectPath)" -c "$(BuildConfiguration)" --no-build -o "$(PackageOutputPath)" /p:PackageId="$(PublishPackageId)" /p:Version="$(SetVersion.PackageVersion)"
+    displayName: Package
+
+  - task: PublishPipelineArtifact@1
+    displayName: Upload artifacts
+    inputs:
+      targetPath: '$(PackageOutputPath)'
+      artifact: 'nuget-package'
+      publishLocation: 'pipeline'
+
+  - script: |
+      dotnet nuget push "$(PackageOutputPath)/*.nupkg" --source "$(FeedUrl)" --api-key "az" --skip-duplicate
+    displayName: Publish to Azure DevOps NuGet feed
+    condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/release-'), eq(variables['Build.Reason'], 'Manual')))
